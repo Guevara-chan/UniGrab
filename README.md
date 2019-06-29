@@ -3,7 +3,8 @@ __Uni|Grab__ is an universal log alayzing utility, made to extract and check IP 
 Developed by [friendly](https://github.com/d38k8) request, it's focused on achieving total source format agnosticism eventualy.
 
 # •Featuræ•
-* Total self-hosting with no external library dependencies.
+* Multiple (and growing) list of src formats supported.
+* Totally self-hosting with no external library dependencies.
 * No config required except providing desirable input dir as cmdline arg (`".\feed"` by defalut).
 
 # •Reassembling•
