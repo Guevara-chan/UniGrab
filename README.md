@@ -1,5 +1,5 @@
 # •Sum•
-__Uni|Grab__ is an universal log alayzing utility, made to extract and check IP data from [Nesca](https://github.com/pantyusha/nesca)/[expcamera](https://github.com/vanpersiexp/expcamera)/[Router Scan](https://forum.antichat.ru/threads/398971/) reports.  
+__Uni|Grab__ is a polyglot log alayzing utility, made to extract and check IP data from [Nesca](https://github.com/pantyusha/nesca)/[expcamera](https://github.com/vanpersiexp/expcamera)/[Router Scan](https://forum.antichat.ru/threads/398971/) reports.  
 Developed by [friendly](https://github.com/d38k8) request, it's focused on achieving total source format agnosticism eventualy.
 
 # •Featuræ•
