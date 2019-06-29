@@ -49,8 +49,12 @@ when not defined(DataList):
             var csv: CsvParser
             csv.open(file, ';')
             csv.readHeaderRow()
-            while csv.readRow():
-                result.add compose(csv.rowEntry("IP Address"), csv.rowEntry("Port"), csv.rowEntry("Authorization"))
+            if "IP Address" in csv.headers: # Correct headers parsing.
+                while csv.readRow():
+                    result.add compose(csv.rowEntry("IP Address"), csv.rowEntry("Port"), csv.rowEntry("Authorization"))
+            else: # Guess-based headers parsing.
+                while csv.readRow():
+                    result.add compose(csv.row[0], csv.row[1], csv.row[4])
 
     proc grab*(feed: string): DataList =
         var grab_res: seq[FlowVar[seq[UniData]]]
@@ -69,9 +73,10 @@ when not defined(DataList):
 # --Extra--
 getAppFilename().splitFile.dir.setCurrentDir
 when isMainModule:
+    echo grab("./feed").raw()
     let listing = grab("./feed").check()
     for l in listing: l.addCallback(
-        proc(fut: Future[string]) = 
-            if fut.read()!="": echo fut.read()
+         proc(fut: Future[string]) = 
+             if fut.read()!="": echo fut.read()
     )
     discard listing.all.waitFor()
