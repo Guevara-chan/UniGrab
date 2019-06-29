@@ -12,5 +12,4 @@ __Uni|Grab__ has been entirelly made for [Nim 0.20.0](https://nim-lang.org) and 
 Compilation can be achieved through automated build script provided as `release.nims`.
 
 # •Brief sampling of data reap•
-![image](https://user-images.githubusercontent.com/8768470/60386732-d70ee300-9aa1-11e9-8262-5a78a3e1efec.png)
-
+![image](https://user-images.githubusercontent.com/8768470/60387810-b64e8980-9ab1-11e9-9c00-7cd75ac396eb.png)
