@@ -21,9 +21,11 @@ when not defined(UniData):
         yield future
         if future.failed: return "" 
         else:
-            let html = future.read.parseHtml
-            var title = try: html.findAll("title")[0].innerText except: $(html.findAll("meta")[0])
-            return url & " == " & title
+            try:
+                let html = future.read.parseHtml
+                var title = try: (try: html.findAll("title")[0].innerText except: $(html.findAll("meta")[0])) except: ""
+                return url & " == " & title
+            except: return ""
 
     proc compose*(ip: string, port: int|string, creds: string = ""): UniData {.inline} =
         result = UniData(ip: ip, port: $port, creds: creds)
