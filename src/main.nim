@@ -12,13 +12,16 @@ when not defined(UI):
 
     # --Methods goes here.
     proc checker(args: check_args) {.thread.} =
+        let (output, out_accum) = args
         while true:
-            let (output, out_accum) = args
-            let last_grab   = check_chan.recv()
-            let out_path    = out_accum.value
-            output.value    = ".../Please, wait/..."
-            output.value    = last_grab.check.all.waitFor().filterIt(it!="").join("\n")
-            out_path.writeFile(output.value)
+            try:
+                let last_grab   = check_chan.recv()
+                let out_path    = out_accum.value
+                output.value    = ".../Please, wait/..."
+                output.value    = last_grab.check.all.waitFor().filterIt(it!="").join("\n")
+                out_path.writeFile(output.value)
+            except: output.value = getCurrentExceptionMsg() 
+
 
     proc main(def_feed: string) =
         # -Init definitions.
@@ -43,9 +46,8 @@ when not defined(UI):
             addcreds= CheckBox(pchunks, label="+login")
         var last_grab:      DataList
         var check_thread:   Thread[check_args]
-
         # -Additional fixes.
-        frame.icon = Icon("", 0)
+        try: frame.icon = Icon("", 0) except: discard
         panel.margin = 5
         # -Auxiliary procs.
         proc layout() =
