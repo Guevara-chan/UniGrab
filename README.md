@@ -4,8 +4,8 @@ Developed by [friendly](https://github.com/d38k8) request, it's focused on achie
 
 # •Featuræ•
 * Multiple (and growing) list of src formats supported.
-* No external library dependencies - just a single self-hosting .exe.
-* No config required except providing desirable input dir as cmdline arg (`".\feed"` by defalut).
+* No external library dependencies - just a single self-hosting `.exe`.
+* No config required except providing desirable input dir as cmdline arg (`.\feed` by defalut).
 
 # •Reassembling•
 __Uni|Grab__ has been entirelly made for [Nim 0.20.0](https://nim-lang.org) and external [wNim](https://github.com/khchen/wNim) package by Ward.  
