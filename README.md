@@ -8,7 +8,7 @@ Developed by [friendly](https://github.com/d38k8) request, it's focused on achie
 * No config required except providing desirable input dir as cmdline arg (`.\feed` by defalut).
 
 # •Reassembling•
-__Uni|Grab__ has been entirelly made for [Nim 0.20.0](https://nim-lang.org) and external [wNim](https://github.com/khchen/wNim) package by Ward.  
+__Uni|Grab__ has been entirelly made for [Nim 0.20.0](https://nim-lang.org) and third-party [wNim](https://github.com/khchen/wNim) package by Ward.  
 Compilation can be achieved through automated build script provided as `release.nims`.
 
 # •Brief sampling of data reap•
