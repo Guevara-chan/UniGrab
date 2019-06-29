@@ -1,5 +1,5 @@
 # •Sum•
-*Description pending...*
+__Uni|Grab__ is an universal log alayzing utility, developed to extract and check IP data from [Nesca](https://github.com/pantyusha/nesca)/[expcamera](https://github.com/vanpersiexp/expcamera) reports.
 
 # •Reassembling•
 __Uni|Grab__ has been entirelly made for [Nim 0.20.0](https://nim-lang.org) and external [wNim](https://github.com/khchen/wNim) package by Ward.  
