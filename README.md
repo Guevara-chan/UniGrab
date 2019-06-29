@@ -2,7 +2,7 @@
 *Description pending...*
 
 # •Reassembling•
-__Uni|Grab__ has been entirelly made for [Nim 0.20.0](https://nim-lang.org) and external [wNim](https://github.com/khchen/wNim) package by VK Brain.  
+__Uni|Grab__ has been entirelly made for [Nim 0.20.0](https://nim-lang.org) and external [wNim](https://github.com/khchen/wNim) package by Ward.  
 Compilation can be achieved through automated build script provided as `release.nims`.
 
 # •Brief sampling of data reap•
