@@ -19,13 +19,15 @@ when not defined(UniData):
         let future = newAsyncHttpClient().getContent(url)
         future.withTimeout(timeout).addCallback(proc() = future.fail(newException(OSError, "HTTP timed out.")))
         yield future
-        if future.failed: return "" 
+        if future.error != nil: return "" 
         else:
-            try:
-                let html = future.read.parseHtml
-                var title = try: (try: html.findAll("title")[0].innerText except: $(html.findAll("meta")[0])) except: ""
-                return url & " == " & title
-            except: return ""
+            let resp = future.read()
+            let title = try: # Hardcore for hardcore gods !
+                let html = resp.parseHtml
+                try: (try: html.findAll("title")[0].innerText except: $(html.findAll("meta")[0])) # Title/meta #1
+                except: html[0].innerText.substr(0, 20)                                           # Somebody text.
+            except: resp.substr(0, 20)                                                            # ...some text.
+            return url & " == " & title
 
     proc compose*(ip: string, port: int|string, creds: string = ""): UniData {.inline} =
         result = UniData(ip: ip, port: $port, creds: creds)
