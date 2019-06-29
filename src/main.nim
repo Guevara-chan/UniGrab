@@ -3,6 +3,7 @@
 # Developed in 2019 by Guevara-chan
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
 import core, os, strutils, sequtils, asyncdispatch, wnim
+when sizeof(int) == 8: {.link: "res/uni64.o".}
 
 #.{ [Classes]
 when not defined(UI):
@@ -44,6 +45,7 @@ when not defined(UI):
         var check_thread:   Thread[check_args]
 
         # -Additional fixes.
+        frame.icon = Icon("", 0)
         panel.margin = 5
         # -Auxiliary procs.
         proc layout() =
