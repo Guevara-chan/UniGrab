@@ -4,7 +4,7 @@ Developed by [friendly](https://github.com/d38k8) request, it's focused on achie
 
 # •Featuræ•
 * Multiple (and growing) list of src formats supported.
-* No external library dependencies - just a single self-hosting `.exe`.
+* No external library dependencies - just a single self-hosting `.exe` file.
 * No config required except providing desirable input dir as cmdline arg (`.\feed` by defalut).
 
 # •Reassembling•
