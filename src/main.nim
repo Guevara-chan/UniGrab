@@ -4,10 +4,10 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
 import core, os, strutils, sequtils, asyncdispatch, wnim
 when sizeof(int) == 8: {.link: "res/uni64.o".}
+{.this: self.}
 
 #.{ [Classes]
 when not defined(UniUI):
-    #type check_args = tuple[output: wTextCtrl, out_accum: wTextCtrl]
     type UniUI = ref object of wApp
         check_thread:       Thread[UniUI]
         checked, checklog:  wTextCtrl
@@ -22,20 +22,19 @@ when not defined(UniUI):
         if err_text != "": MessageDialog(nil, err_text, "[Uni|Grab] error:", wIconErr).show.int == 0 else: true
 
     proc checker(self: UniUI) {.thread.} =
-        let (output, out_accum) = (self.checked, self.checklog)
         while true:
             try:
                 let last_grab   = check_chan.recv()
-                let out_path    = out_accum.value
-                output.value    = ".../Please, wait/..."
-                output.value    = last_grab.check.all.waitFor().filterIt(it!="").join("\n")
-                output.dump(out_path)
-            except: output.value = getCurrentExceptionMsg() 
+                let out_path    = checklog.value
+                checked.value   = ".../Please, wait/..."
+                checked.value   = last_grab.check.all.waitFor().filterIt(it!="").join("\n")
+                checked.dump(out_path)
+            except: checked.value = getCurrentExceptionMsg() 
 
     proc newUniUI(def_feed: string): UniUI {.discardable.} =
         # -Init definitions.
-        result = new UniUI
-        let
+        let 
+            self    = new UniUI
             tstyle  = wBorderSunken or wTeRich or wTeReadOnly or wTeMultiline or wVScroll
             app     = App()
             frame   = Frame(title="=[Uni|Grab v0.03]=", size=(400, 220))
@@ -56,7 +55,7 @@ when not defined(UniUI):
             addcreds= CheckBox(pchunks, label="+login")
         var last_grab: DataList
         # -Additional fixes.
-        (result.checked, result.checklog) = (checked, checklog)
+        (self.checked, self.checklog) = (checked, checklog)
         try: frame.icon = Icon("", 0) except: discard
         panel.margin = 5
         # -Auxiliary procs.
@@ -109,11 +108,11 @@ when not defined(UniUI):
         # -Finalization.
         check_chan.open()
         layout(); best_out(); process()
-        result.check_thread.createThread(checker, result)
+        self.check_thread.createThread(checker, self)
         frame.center()
         frame.show()
         app.mainLoop()
-        return result
+        return self
 #.}
 
 # ==Main code==
