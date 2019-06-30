@@ -15,6 +15,9 @@ when not defined(UI):
         try: (path.writeFile(feed.value); "")
         except: getCurrentExceptionMsg()
 
+    proc inquire(err_text: string): bool =
+        if err_text != "": MessageDialog(nil, err_text, "[Uni|Grab] error:", wIconErr).show.int == 0 else: true
+
     proc checker(args: check_args) {.thread.} =
         let (output, out_accum) = args
         while true:
@@ -85,9 +88,8 @@ when not defined(UI):
             checklog.value = ".".joinPath(fname & " - checked.txt")
         proc ask_path(tc: wTextCtrl, feed: wTextCtrl) =
             const pattern = "Log files (*.txt)|(*.txt)|All files (*.*)|(*.*)"
-            echo tc.value.splitFile.dir
-            let res=FileDialog(frame,style=wFdSave,wildcard=pattern,defaultDir= tc.value.splitFile.dir).showModalResult()
-            if res.len > 0 and feed.dump(res[0]) == "": tc.value = res[0]
+            let res=FileDialog(frame,style=wFdSave,wildcard=pattern,defaultDir=tc.value.splitFile.dir).showModalResult()
+            if res.len > 0 and feed.dump(res[0]).inquire(): tc.value = res[0]
         # -Event handling.
         feed.wEvent_Text            do (): best_out()
         panel.wEvent_Size           do (): layout()
