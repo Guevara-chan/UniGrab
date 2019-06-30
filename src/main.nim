@@ -34,8 +34,8 @@ when not defined(UniUI):
     proc newUniUI(def_feed: string): UniUI {.discardable.} =
         # -Init definitions.
         let 
-            self    = new UniUI
             tstyle  = wBorderSunken or wTeRich or wTeReadOnly or wTeMultiline or wVScroll
+            self    = new UniUI
             app     = App()
             frame   = Frame(title="=[Uni|Grab v0.03]=", size=(400, 220))
             panel   = Panel(frame)
