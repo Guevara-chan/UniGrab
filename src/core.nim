@@ -20,13 +20,12 @@ when not defined(UniData):
         future.withTimeout(timeout).addCallback(proc() = future.fail(newException(OSError, "HTTP timed out.")))
         yield future
         let resp = FutureVar[string](future).mget() # Unconventional fixing to avoid HttpRequestErrors.
-        future.error = nil; complete(future, resp)  # Unconventional fixing to avoid assertion errors.
         if future.failed or resp.len == 0 : return ""
         else:
             let title = if resp.len > 15:                                                         # Any reason to parse?
                 let html = resp.parseHtml                                                         # OK, breaking it to:
-                try: (try: html.findAll("title")[0].innerText except: $(html.findAll("meta")[0])) # Title/meta #1
-                except: html[0].innerText.substr(0, 20)                                           # Somebody text.
+                try: (try: html.findAll("title")[0].innerText except: html[0].innerText.substr(0, 20)) # Title/meta #1
+                except: html.innerText.substr(0, 20)                                              # Some text.
             else: resp                                                                            # ...or getting as is.
             return url & " == " & title
 
@@ -76,7 +75,6 @@ when not defined(DataList):
 #.}
 
 # --Extra--
-echo "".substr(0, 20)
 getAppFilename().splitFile.dir.setCurrentDir
 when isMainModule:
     echo grab("./feed").raw()
