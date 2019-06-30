@@ -6,9 +6,13 @@ import core, os, strutils, sequtils, asyncdispatch, wnim
 when sizeof(int) == 8: {.link: "res/uni64.o".}
 
 #.{ [Classes]
-when not defined(UI):
-    type check_args = tuple[output: wTextCtrl, out_accum: wTextCtrl]
-    var check_chan: Channel[DataList]
+when not defined(UniUI):
+    type UniUI = object
+        app:            wApp
+        frame:          wFrame
+        checked, checklog: wTextCtrl
+    var check_thread:   Thread[UniUI]
+    var check_chan:     Channel[DataList]
 
     # --Methods goes here.
     proc dump(feed: wTextCtrl, path: string): string {.discardable.} =
@@ -18,8 +22,8 @@ when not defined(UI):
     proc inquire(err_text: string): bool =
         if err_text != "": MessageDialog(nil, err_text, "[Uni|Grab] error:", wIconErr).show.int == 0 else: true
 
-    proc checker(args: check_args) {.thread.} =
-        let (output, out_accum) = args
+    proc checker(self: UniUI) {.thread.} =
+        let (output, out_accum) = (self.checked, self.checklog)
         while true:
             try:
                 let last_grab   = check_chan.recv()
@@ -29,13 +33,16 @@ when not defined(UI):
                 output.dump(out_path)
             except: output.value = getCurrentExceptionMsg() 
 
-    proc main(def_feed: string) =
-        # -Init definitions.
+    proc newUniUI(def_feed: string): UniUI {.discardable.} =
+        # -Global definitions.
+        result.app      = App()
+        result.frame    = Frame(title="=[Uni|Grab v0.03]=", size=(400, 220))
+        check_chan.open()
+        # -Local definitions.
         let
-            tstyle  = wBorderSunken or wTeRich or wTeReadOnly or wTeMultiline or wVScroll
-            app     = App()
+            tstyle  = wBorderSunken or wTeRich or wTeReadOnly or wTeMultiline or wVScroll           
             frame   = Frame(title="=[Uni|Grab v0.03]=", size=(400, 220))
-            panel   = Panel(frame)
+            panel   = Panel(result.frame)
             panels  = NoteBook(panel)
             pchunks = panels.insertPage(text="Chunks")
             pchecks = panels.insertPage(text="Checkup")
@@ -50,9 +57,9 @@ when not defined(UI):
             checklog= TextCtrl(pchecks, style=wBorderSunken)
             addports= CheckBox(pchunks, label="+port")
             addcreds= CheckBox(pchunks, label="+login")
-        var last_grab:      DataList
-        var check_thread:   Thread[check_args]
+        var last_grab: DataList
         # -Additional fixes.
+        (result.checked, result.checklog) = (checked, checklog)
         try: frame.icon = Icon("", 0) except: discard
         panel.margin = 5
         # -Auxiliary procs.
@@ -80,7 +87,8 @@ when not defined(UI):
             chunks.dump(chunklog.value)
             chunks.showPosition(0)
         proc process() =
-            try:    last_grab = grab(feed.value); format(); check_chan.send(last_grab)
+            try:    
+                last_grab = grab(feed.value); format(); check_chan.send(last_grab)
             except: chunks.value = getCurrentExceptionMsg() 
         proc best_out() =
             let fname = feed.value.splitFile.name
@@ -103,13 +111,14 @@ when not defined(UI):
                 defaultPath = if feed.value.dirExists:feed.value.absolutePath else: "").showModalResult()
             if new_feed != "": feed.value = new_feed            
         # -Finalization.
-        check_chan.open()
         layout(); best_out(); process()
-        check_thread.createThread(checker, (checked, checklog))
-        frame.center()
-        frame.show()
-        app.mainLoop()
+        var T = result
+        check_thread.createThread(checker, T)
+        result.frame.center()
+        result.frame.show()
+        result.app.mainLoop()
+        return result
 #.}
 
 # ==Main code==
-main(if paramCount() > 0: paramStr(1) else: ".\\feed")
+newUniUI(if paramCount() > 0: paramStr(1) else: ".\\feed")
