@@ -15,7 +15,7 @@ when not defined(UniData):
     proc check*(self: UniData, timeout = 5000): Future[string] {.async.} =
         # Aux proc.
         proc checkNil(txt: string): string =
-            result = txt.strip().replace('\n', ' '); if result == "": raise newException(ValueError, "I Am Error")
+            result = txt.replace('\n', ' ').strip(); if result == "": raise newException(ValueError, "I Am Error")
         proc anyText(root: XmlNode): string =
             for child in root: (try: return child.innerText.checkNil except: discard)
         # Init setup.
