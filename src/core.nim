@@ -59,12 +59,13 @@ when not defined(DataList):
             var csv: CsvParser
             csv.open(file, ';')
             csv.readHeaderRow()
-            if "IP Address" in csv.headers: # Correct headers parsing.
+            if "IP Address" in csv.headers: # Named headers parsing.
                 while csv.readRow():
                     result.add compose(csv.rowEntry("IP Address"), csv.rowEntry("Port"), csv.rowEntry("Authorization"))
-            else: # Guess-based headers parsing.
+            else:                           # Guess-based headers parsing.
+                let (ip, port, creds) = (0, 1, 4)
                 while csv.readRow():
-                    result.add compose(csv.row[0], csv.row[1], csv.row[4])
+                    result.add compose(csv.row[ip], csv.row[port], csv.row[creds])
 
     proc grab*(feed: string): DataList =
         var grab_res: seq[FlowVar[seq[UniData]]]
