@@ -11,6 +11,7 @@ when not defined(UniUI):
     type UniUI = ref object of wApp
         check_thread:       Thread[UniUI]
         checked, checklog:  wTextCtrl
+        last_grab:          DataList
     var check_chan: Channel[DataList]
 
     # --Methods goes here.
@@ -53,7 +54,6 @@ when not defined(UniUI):
             checklog= TextCtrl(pchecks, style=wBorderSunken)
             addports= CheckBox(pchunks, label="+port")
             addcreds= CheckBox(pchunks, label="+login")
-        var last_grab: DataList
         # -Additional fixes.
         (self.checked, self.checklog) = (checked, checklog)
         try: frame.icon = Icon("", 0) except: discard
@@ -79,11 +79,11 @@ when not defined(UniUI):
             V:|[checked]-1-[checklog]-1-|
             """
         proc format() =
-            chunks.value = last_grab.raw(addports.value, addcreds.value).join("\n") 
+            chunks.value = self.last_grab.raw(addports.value, addcreds.value).join("\n") 
             chunks.dump(chunklog.value)
             chunks.showPosition(0)
         proc process() =
-            try:    last_grab = grab(feed.value); format(); check_chan.send(last_grab)
+            try:    self.last_grab = grab(feed.value); format(); check_chan.send(self.last_grab)
             except: chunks.value = getCurrentExceptionMsg() 
         proc best_out() =
             let fname = feed.value.splitFile.name
