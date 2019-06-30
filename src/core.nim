@@ -28,11 +28,12 @@ when not defined(UniData):
         let resp = FutureVar[string](future).mget() # Unconventional fixing to avoid HttpRequestErrors.
         if future.failed or resp.len == 0 : return ""
         else:
-            let brief = if resp.len > 15: # Any reason to parse?
-                let html = resp.parseHtml # OK, breaking it to either title tag or text of first child:
-                try: (try: html.findAll("title")[0].innerText.isNil except: html[0].innerText.isNil.substr(0, 20))
-                except: ":/nil/:"         # No luck == nil
-            else: resp                    # No reason == returning as is.
+            let brief = if resp.len > 15:     # Any reasons to ever parse?
+                try:
+                    let html = resp.parseHtml # OK, breaking it to either title tag or text of first child:
+                    try: html.findAll("title")[0].innerText.isNil except: html[0].innerText.isNil.substr(0, 20)
+                except: ":/nil/:"             # No luck == nil
+            else: resp                        # No reason == returning as is.
             return url & " == " & brief
 
     proc compose*(ip: string, port: int|string, creds: string = ""): UniData {.inline} =
