@@ -23,9 +23,11 @@ when not defined(UniData):
         future.error = nil; complete(future, resp)  # Unconventional fixing to avoid assertion errors.
         if future.failed or resp.len == 0 : return ""
         else:
-            let html = resp.parseHtml
-            let title = try: (try: html.findAll("title")[0].innerText except: $(html.findAll("meta")[0]))# Title/meta #1
-            except: html[0].innerText.substr(0, 20)                                                      # Somebody text.
+            let title = if resp.len > 15:                                                         # Any reason to parse?
+                let html = resp.parseHtml                                                         # OK, breaking it to:
+                try: (try: html.findAll("title")[0].innerText except: $(html.findAll("meta")[0])) # Title/meta #1
+                except: html[0].innerText.substr(0, 20)                                           # Somebody text.
+            else: resp                                                                            # ...or getting as is.
             return url & " == " & title
 
     proc compose*(ip: string, port: int|string, creds: string = ""): UniData {.inline} =
