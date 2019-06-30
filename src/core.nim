@@ -20,12 +20,13 @@ when not defined(UniData):
             for child in root: (try: return child.innerText.checkNil except: discard)
         # Init setup.
         let url = "http://" & self.raw()
-        let future = newAsyncHttpClient().getContent(url)
-        future.withTimeout(timeout).addCallback(proc() = future.fail(newException(OSError, "HTTP timed out.")))
-        yield future
+        let client = newAsyncHttpClient()
+        let future = client.getContent(url)
+        yield future.withTimeout(timeout)
+        client.close()
         # Actual handling.
         let resp = FutureVar[string](future).mget()
-        if future.failed or resp.len == 0 : return ""
+        if future.failed or resp.len == 0: return ""
         else:
             let brief = if resp.len > 15:     # Any reasons to ever parse?
                 try:
@@ -92,9 +93,11 @@ when not defined(DataList):
 getAppFilename().splitFile.dir.setCurrentDir
 when isMainModule:
     echo grab("./feed").raw()
-    let listing = grab("./feed").check()
-    for l in listing: l.addCallback(
-         proc(fut: Future[string]) = 
-            if fut.read()!="": echo fut.read()
-    )
-    listing.wait()
+    while true:
+        let listing = grab("./feed").check()
+        for l in listing: l.addCallback(
+             proc(fut: Future[string]) = 
+                if fut.read()!="": echo fut.read()
+        )
+        echo listing.wait()
+        echo "---------------------"
