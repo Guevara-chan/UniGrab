@@ -7,9 +7,9 @@ when sizeof(int) == 8: {.link: "res/uni64.o".}
 
 #.{ [Classes]
 when not defined(UniUI):
-    type check_args = tuple[output: wTextCtrl, out_accum: wTextCtrl]
+    #type check_args = tuple[output: wTextCtrl, out_accum: wTextCtrl]
     type UniUI = ref object of wApp
-        check_thread:       Thread[check_args]
+        check_thread:       Thread[UniUI]
         checked, checklog:  wTextCtrl
     var check_chan: Channel[DataList]
 
@@ -21,8 +21,8 @@ when not defined(UniUI):
     proc inquire(err_text: string): bool {.discardable.} =
         if err_text != "": MessageDialog(nil, err_text, "[Uni|Grab] error:", wIconErr).show.int == 0 else: true
 
-    proc checker(args: check_args) {.thread.} =
-        let (output, out_accum) = args
+    proc checker(self: UniUI) {.thread.} =
+        let (output, out_accum) = (self.checked, self.checklog)
         while true:
             try:
                 let last_grab   = check_chan.recv()
@@ -109,7 +109,7 @@ when not defined(UniUI):
         # -Finalization.
         check_chan.open()
         layout(); best_out(); process()
-        result.check_thread.createThread(checker, (checked, checklog))
+        result.check_thread.createThread(checker, result)
         frame.center()
         frame.show()
         app.mainLoop()
