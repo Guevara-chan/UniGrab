@@ -11,6 +11,10 @@ when not defined(UI):
     var check_chan: Channel[DataList]
 
     # --Methods goes here.
+    proc dump(feed: wTextCtrl, path: string): string {.discardable.} =
+        try: (path.writeFile(feed.value); "")
+        except: getCurrentExceptionMsg()
+
     proc checker(args: check_args) {.thread.} =
         let (output, out_accum) = args
         while true:
@@ -19,9 +23,8 @@ when not defined(UI):
                 let out_path    = out_accum.value
                 output.value    = ".../Please, wait/..."
                 output.value    = last_grab.check.all.waitFor().filterIt(it!="").join("\n")
-                out_path.writeFile(output.value)
+                output.dump(out_path)
             except: output.value = getCurrentExceptionMsg() 
-
 
     proc main(def_feed: string) =
         # -Init definitions.
@@ -35,8 +38,8 @@ when not defined(UI):
             pchecks = panels.insertPage(text="Checkup")
             start   = Button(panel, label="Grab:")
             ilocate = Button(panel, label="Locate..")
-            olocate = Button(pchunks, label="Locate..")
-            clocate = Button(pchecks, label="Locate..")
+            chunksav= Button(pchunks, label="Save..")
+            checksav= Button(pchecks, label="Save..")
             feed    = TextCtrl(panel, style=wBorderSunken, value=def_feed)
             chunks  = TextCtrl(pchunks, style=tstyle)
             checked = TextCtrl(pchecks, style=tstyle)
@@ -59,19 +62,19 @@ when not defined(UI):
             """
             panels[0].autolayout """
             |[chunks]|
-            |[addports(=55)][addcreds(=55)][chunklog][olocate(=55)]|
-            V:|[chunks][addports,addcreds, olocate]|
+            |[addports(=55)][addcreds(=55)][chunklog][chunksav(=55)]|
+            V:|[chunks][addports,addcreds, chunksav]|
             V:|[chunks]-1-[chunklog]-1-|
             """
             panels[1].autolayout """
             |[checked]|
-            |[checklog][clocate(=55)]|
-            V:|[checked][clocate]|
+            |[checklog][checksav(=55)]|
+            V:|[checked][checksav]|
             V:|[checked]-1-[checklog]-1-|
             """
         proc format() =
             chunks.value = last_grab.raw(addports.value, addcreds.value).join("\n") 
-            chunklog.value.writeFile(chunks.value)
+            chunks.dump(chunklog.value)
             chunks.showPosition(0)
         proc process() =
             try:    last_grab = grab(feed.value); format(); check_chan.send(last_grab)
@@ -80,17 +83,19 @@ when not defined(UI):
             let fname = feed.value.splitFile.name
             chunklog.value = ".".joinPath(fname & " - chunks.txt")
             checklog.value = ".".joinPath(fname & " - checked.txt")
-        proc ask_path(tc: wTextCtrl) =
-            let res=FileDialog(frame,style=wFdSave,wildcard="*.txt",defaultFile=tc.value.absolutePath).showModalResult()
-            if res.len > 0: tc.value = res[0]
+        proc ask_path(tc: wTextCtrl, feed: wTextCtrl) =
+            const pattern = "Log files (*.txt)|(*.txt)|All files (*.*)|(*.*)"
+            echo tc.value.splitFile.dir
+            let res=FileDialog(frame,style=wFdSave,wildcard=pattern,defaultDir= tc.value.splitFile.dir).showModalResult()
+            if res.len > 0 and feed.dump(res[0]) == "": tc.value = res[0]
         # -Event handling.
         feed.wEvent_Text            do (): best_out()
         panel.wEvent_Size           do (): layout()
         start.wEvent_Button         do (): process()
         addports.wEvent_CheckBox    do (): format()
         addcreds.wEvent_CheckBox    do (): format()
-        olocate.wEvent_Button       do (): ask_path(chunklog)
-        clocate.wEvent_Button       do (): ask_path(checklog)
+        chunksav.wEvent_Button      do (): ask_path(chunklog, chunks)
+        checksav.wEvent_Button      do (): ask_path(checklog, checked)
         ilocate.wEvent_Button       do (): # Input directory selector.
             let new_feed = DirDialog(frame, 
                 defaultPath = if feed.value.dirExists:feed.value.absolutePath else: "").showModalResult()
