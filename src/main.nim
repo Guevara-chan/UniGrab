@@ -7,8 +7,10 @@ when sizeof(int) == 8: {.link: "res/uni64.o".}
 
 #.{ [Classes]
 when not defined(UniUI):
-    type UniUI = object
     type check_args = tuple[output: wTextCtrl, out_accum: wTextCtrl]
+    type UniUI = ref object of wApp
+        check_thread:       Thread[check_args]
+        checked, checklog:  wTextCtrl
     var check_chan: Channel[DataList]
 
     # --Methods goes here.
@@ -32,6 +34,7 @@ when not defined(UniUI):
 
     proc newUniUI(def_feed: string): UniUI {.discardable.} =
         # -Init definitions.
+        result = new UniUI
         let
             tstyle  = wBorderSunken or wTeRich or wTeReadOnly or wTeMultiline or wVScroll
             app     = App()
@@ -51,9 +54,9 @@ when not defined(UniUI):
             checklog= TextCtrl(pchecks, style=wBorderSunken)
             addports= CheckBox(pchunks, label="+port")
             addcreds= CheckBox(pchunks, label="+login")
-        var last_grab:      DataList
-        var check_thread:   Thread[check_args]
+        var last_grab: DataList
         # -Additional fixes.
+        (result.checked, result.checklog) = (checked, checklog)
         try: frame.icon = Icon("", 0) except: discard
         panel.margin = 5
         # -Auxiliary procs.
@@ -106,7 +109,7 @@ when not defined(UniUI):
         # -Finalization.
         check_chan.open()
         layout(); best_out(); process()
-        check_thread.createThread(checker, (checked, checklog))
+        result.check_thread.createThread(checker, (checked, checklog))
         frame.center()
         frame.show()
         app.mainLoop()
