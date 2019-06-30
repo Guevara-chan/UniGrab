@@ -2,6 +2,7 @@
 # Uni|Grab unified data ripper core
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
 import os, htmlparser, xmlparser, parsecsv, xmltree, uri, httpclient, threadpool, asyncdispatch
+from strutils import strip
 
 #.{ [Classes]
 when not defined(UniData):
@@ -15,19 +16,24 @@ when not defined(UniData):
         (if add_creds and self.creds.len>1: self.creds&"@" else: "") & self.ip & (if add_port: ":" & self.port else: "")
 
     proc check*(self: UniData, timeout = 5000): Future[string] {.async.} =
+        # Aux proc.
+        proc isNil(txt: string): string =
+            result = txt.strip(); if result == "": raise newException(ValueError, "I Am Error")
+        # Init setup.
         let url = "http://" & self.raw()
         let future = newAsyncHttpClient().getContent(url)
         future.withTimeout(timeout).addCallback(proc() = future.fail(newException(OSError, "HTTP timed out.")))
         yield future
+        # Actual handling.
         let resp = FutureVar[string](future).mget() # Unconventional fixing to avoid HttpRequestErrors.
         if future.failed or resp.len == 0 : return ""
         else:
-            let title = if resp.len > 15:                                                         # Any reason to parse?
-                let html = resp.parseHtml                                                         # OK, breaking it to:
-                try: (try: html.findAll("title")[0].innerText except: html[0].innerText.substr(0, 20)) # Title/meta #1
-                except: html.innerText.substr(0, 20)                                              # Some text.
-            else: resp                                                                            # ...or getting as is.
-            return url & " == " & title
+            let brief = if resp.len > 15: # Any reason to parse?
+                let html = resp.parseHtml # OK, breaking it to either title tag or text of first child:
+                try: (try: html.findAll("title")[0].innerText.isNil except: html[0].innerText.isNil.substr(0, 20))
+                except: ":/nil/:"         # No luck == nil
+            else: resp                    # No reason == returning as is.
+            return url & " == " & brief
 
     proc compose*(ip: string, port: int|string, creds: string = ""): UniData {.inline} =
         result = UniData(ip: ip, port: $port, creds: creds)
