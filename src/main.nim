@@ -2,7 +2,7 @@
 # Uni|Grab unified data ripper v0.03
 # Developed in 2019 by Guevara-chan
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
-import core, os, strutils, sequtils, asyncdispatch, wnim
+import core, os, strutils, sequtils, wnim
 when sizeof(int) == 8: {.link: "res/uni64.o".}
 {.this: self.}
 
@@ -28,7 +28,7 @@ when not defined(UniUI):
                 let last_grab   = check_chan.recv()
                 let out_path    = checklog.value
                 checked.value   = ".../Please, wait/..."
-                checked.value   = last_grab.check.all.waitFor().filterIt(it!="").join("\n")
+                checked.value   = last_grab.check.wait().filterIt(it!="").join("\n")
                 checked.dump(out_path)
             except: checked.value = getCurrentExceptionMsg() 
 

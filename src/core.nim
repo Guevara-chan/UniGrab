@@ -79,6 +79,13 @@ when not defined(DataList):
 
     proc check*(self: DataList): seq[Future[string]] =
         for ud in self: result.add(ud.check)
+
+    proc wait*(self: seq[Future[string]]): seq[string] {.discardable.} =
+        for future in self:
+            try:
+                while not future.finished: poll()
+                result.add(future.read())
+            except: discard
 #.}
 
 # --Extra--
@@ -90,4 +97,4 @@ when isMainModule:
          proc(fut: Future[string]) = 
             if fut.read()!="": echo fut.read()
     )
-    discard listing.all.waitFor()
+    listing.wait()
