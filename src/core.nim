@@ -21,13 +21,11 @@ when not defined(UniData):
         yield future
         let resp = FutureVar[string](future).mget() # Unconventional fixing to avoid HttpRequestErrors.
         future.error = nil; complete(future, resp)  # Unconventional fixing to avoid assertion errors.
-        if future.failed: return ""
+        if future.failed or resp.len == 0 : return ""
         else:
-            let title = try: # Hardcore for hardcore gods !
-                let html = resp.parseHtml
-                try: (try: html.findAll("title")[0].innerText except: $(html.findAll("meta")[0])) # Title/meta #1
-                except: html[0].innerText.substr(0, 20)                                           # Somebody text.
-            except: resp.substr(0, 15)                                                            # ...some text.
+            let html = resp.parseHtml
+            let title = try: (try: html.findAll("title")[0].innerText except: $(html.findAll("meta")[0]))# Title/meta #1
+            except: html[0].innerText.substr(0, 20)                                                      # Somebody text.
             return url & " == " & title
 
     proc compose*(ip: string, port: int|string, creds: string = ""): UniData {.inline} =
