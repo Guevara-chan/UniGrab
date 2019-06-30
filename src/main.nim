@@ -8,8 +8,6 @@ when sizeof(int) == 8: {.link: "res/uni64.o".}
 #.{ [Classes]
 when not defined(UniUI):
     type UniUI = object
-        app:    wApp
-        frame:  wFrame
     type check_args = tuple[output: wTextCtrl, out_accum: wTextCtrl]
     var check_chan: Channel[DataList]
 
@@ -18,7 +16,7 @@ when not defined(UniUI):
         try: (path.writeFile(feed.value); "")
         except: getCurrentExceptionMsg()
 
-    proc inquire(err_text: string): bool =
+    proc inquire(err_text: string): bool {.discardable.} =
         if err_text != "": MessageDialog(nil, err_text, "[Uni|Grab] error:", wIconErr).show.int == 0 else: true
 
     proc checker(args: check_args) {.thread.} =
@@ -32,7 +30,7 @@ when not defined(UniUI):
                 output.dump(out_path)
             except: output.value = getCurrentExceptionMsg() 
 
-    proc main(def_feed: string) =
+    proc newUniUI(def_feed: string): UniUI {.discardable.} =
         # -Init definitions.
         let
             tstyle  = wBorderSunken or wTeRich or wTeReadOnly or wTeMultiline or wVScroll
@@ -112,7 +110,8 @@ when not defined(UniUI):
         frame.center()
         frame.show()
         app.mainLoop()
+        return result
 #.}
 
 # ==Main code==
-main(if paramCount() > 0: paramStr(1) else: ".\\feed")
+newUniUI(if paramCount() > 0: paramStr(1) else: ".\\feed")
