@@ -1,15 +1,12 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
 # Uni|Grab unified data ripper core
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
-import os, htmlparser, xmlparser, parsecsv, xmltree, uri, httpclient, threadpool, asyncdispatch
-from strutils import strip
+import os, strutils, htmlparser, xmlparser, parsecsv, xmltree, uri, httpclient, threadpool, asyncdispatch
 
 #.{ [Classes]
 when not defined(UniData):
     type UniData* = object
-        ip:     string
-        port:   string
-        creds:  string
+        ip, port, creds: string
 
     # --Methods goes here:
     proc raw*(self: UniData, add_port = true, add_creds = true): string {.inline} =
@@ -17,21 +14,23 @@ when not defined(UniData):
 
     proc check*(self: UniData, timeout = 5000): Future[string] {.async.} =
         # Aux proc.
-        proc isNil(txt: string): string =
-            result = txt.strip(); if result == "": raise newException(ValueError, "I Am Error")
+        proc checkNil(txt: string): string =
+            result = txt.strip().replace('\n', ' '); if result == "": raise newException(ValueError, "I Am Error")
+        proc anyText(root: XmlNode): string =
+            for child in root: (try: return child.innerText.checkNil except: discard)
         # Init setup.
         let url = "http://" & self.raw()
         let future = newAsyncHttpClient().getContent(url)
         future.withTimeout(timeout).addCallback(proc() = future.fail(newException(OSError, "HTTP timed out.")))
         yield future
         # Actual handling.
-        let resp = FutureVar[string](future).mget() # Unconventional fixing to avoid HttpRequestErrors.
+        let resp = FutureVar[string](future).mget()
         if future.failed or resp.len == 0 : return ""
         else:
             let brief = if resp.len > 15:     # Any reasons to ever parse?
                 try:
-                    let html = resp.parseHtml # OK, breaking it to either title tag or text of first child:
-                    try: html.findAll("title")[0].innerText.isNil except: html[0].innerText.isNil.substr(0, 20)
+                    let html = resp.parseHtml # OK, breaking it to either title tag or text of any child:
+                    try: html.findAll("title")[0].innerText.checkNil except: html.anyText.checkNil.substr(0, 20)
                 except: ":/nil/:"             # No luck == nil
             else: resp                        # No reason == returning as is.
             return url & " == " & brief
