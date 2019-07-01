@@ -10,6 +10,7 @@ when sizeof(int) == 8: {.link: "res/uni64.o".}
 when not defined(UniUI):
     type UniUI = ref object of wApp
         check_thread:       Thread[UniUI]
+        recheck_thread:     Thread[UniUI]
         checked, checklog:  wTextCtrl
         last_grab:          DataList
     var check_chan: Channel[DataList]
@@ -23,14 +24,18 @@ when not defined(UniUI):
         if err_text != "": MessageDialog(nil, err_text, "[Uni|Grab] error:", wIconErr).show.int == 0 else: true
 
     proc checker(self: UniUI) {.thread.} =
+        try:
+            let last_grab   = check_chan.recv()
+            let out_path    = checklog.value
+            checked.value   = ".../Please, wait/..."
+            checked.value   = last_grab.check.wait().filterIt(it!="").join("\n")
+            checked.dump(out_path)
+        except: checked.value = getCurrentExceptionMsg() 
+
+    proc rechecker(self: UniUI) {.thread.} =
         while true:
-            try:
-                let last_grab   = check_chan.recv()
-                let out_path    = checklog.value
-                checked.value   = ".../Please, wait/..."
-                checked.value   = last_grab.check.wait().filterIt(it!="").join("\n")
-                checked.dump(out_path)
-            except: checked.value = getCurrentExceptionMsg() 
+            if not check_thread.running: check_thread.createThread(checker, self)
+            250.sleep()
 
     proc newUniUI(def_feed: string): UniUI {.discardable.} =
         # -Init definitions.
@@ -83,7 +88,8 @@ when not defined(UniUI):
             chunks.dump(chunklog.value)
             chunks.showPosition(0)
         proc process() =
-            try:    self.last_grab = grab(feed.value); format(); check_chan.send(self.last_grab)
+            try:    
+                self.last_grab = grab(feed.value); format(); check_chan.send(self.last_grab)
             except: chunks.value = getCurrentExceptionMsg() 
         proc best_out() =
             let fname = feed.value.splitFile.name
@@ -108,7 +114,7 @@ when not defined(UniUI):
         # -Finalization.
         check_chan.open()
         layout(); best_out(); process()
-        self.check_thread.createThread(checker, self)
+        self.recheck_thread.createThread(rechecker, self)
         frame.center()
         frame.show()
         app.mainLoop()

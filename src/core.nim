@@ -91,13 +91,4 @@ when not defined(DataList):
 
 # --Extra--
 getAppFilename().splitFile.dir.setCurrentDir
-when isMainModule:
-    echo grab("./feed").raw()
-    while true:
-        let listing = grab("./feed").check()
-        for l in listing: l.addCallback(
-             proc(fut: Future[string]) = 
-                if fut.read()!="": echo fut.read()
-        )
-        echo listing.wait()
-        echo "---------------------"
+when isMainModule: echo grab("./feed").raw()
