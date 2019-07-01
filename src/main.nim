@@ -34,8 +34,7 @@ when not defined(UniUI):
 
     proc rechecker(self: UniUI) {.thread.} =
         while true:
-            if not check_thread.running: check_thread.createThread(checker, self)
-            250.sleep()
+            if not check_thread.running: check_thread.createThread(checker, self) else: 250.sleep()
 
     proc newUniUI(def_feed: string): UniUI {.discardable.} =
         # -Init definitions.
