@@ -72,7 +72,9 @@ when not defined(LexTrio):
         if root.attrs != nil:
             let trio = toSeq(root.attrs.values).newTrio (-1, -1, 0)
             if trio.ip > -1 and trio.port > -1: return (root.tag, toSeq(root.attrs.keys).mapTrio trio)
-        for child in root: return child.find_lexable()
+        for child in root: 
+            let recurse = child.find_lexable()
+            if recurse.kind != "": return recurse
 # -----------------------
 when not defined(DataList):
     type DataList* = seq[UniData]
