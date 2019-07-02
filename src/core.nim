@@ -122,11 +122,12 @@ when not defined(DataList):
                 if not csv.readRow(): break
         except: echo getCurrentExceptionMsg()
 
-    proc grab*(feed: string): DataList =
+    proc grab*(feed: string, recursive = false): DataList =
         var grab_res: seq[FlowVar[DataList]]
         for (mask, prc) in [("xml", grab_xml), ("html", grab_html), ("csv", grab_csv)]:
             for file in feed.joinPath("/*."&mask).walkFiles: grab_res.add spawn(prc(file))
         for res in grab_res: result &= ^res
+        if recursive: (for dir in feed.walkDirs(): result &= dir.grab(true))
         result.deduplicate()
 
     proc raw*(self: DataList, add_port = true, add_creds = true): seq[string] =
