@@ -2,6 +2,8 @@
 # Uni|Grab unified data ripper core
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
 import os, strutils, htmlparser, xmlparser, parsecsv, xmltree, uri, httpclient, threadpool, asyncdispatch
+import sequtils, parseutils
+
 
 #.{ [Classes]
 when not defined(UniData):
@@ -39,6 +41,30 @@ when not defined(UniData):
     proc compose*(ip: string, port: int|string, creds: string = ""): UniData {.inline} =
         result = UniData(ip: ip, port: $port, creds: creds)
 # -----------------------
+when not defined(LexTrio):
+    type LexTrio = tuple[ip: int, port: int, creds: int]
+
+    # --Methofs goese here.
+    proc isIP(src: string): bool =
+        result = try: 
+            let chunks = src.split('.').map(parseUInt)
+            if chunks.len == 4 and chunks.allIt(it < uint8.high): true else: false
+        except: false
+
+    proc isPort(src: string): bool =
+        result = try: (if src.parseUInt < 65536: true else: false)
+        except: false
+
+    proc isCreds(src: string): bool =
+        if src.split(':').len == 2: return true
+
+    proc first_match(sample: seq[string], tester: proc(src: string): bool, def_idx = -1): int {.inline.} = 
+        for idx, elem in sample: (if elem.tester: return idx)
+        return def_idx
+
+    proc newTrio(sample: seq[string], defs: LexTrio = (-1, -1, -1)): LexTrio =
+        (sample.first_match(isIP,defs.ip), sample.first_match(isPort,defs.port), sample.first_match(isCreds,defs.creds))
+# -----------------------
 when not defined(DataList):
     type DataList* = seq[UniData]
 
@@ -64,7 +90,7 @@ when not defined(DataList):
                 while csv.readRow():
                     result.add compose(csv.rowEntry("IP Address"), csv.rowEntry("Port"), csv.rowEntry("Authorization"))
             else:                           # Guess-based headers parsing.
-                let (ip, port, creds) = (0, 1, 4)
+                let (ip, port, creds) = csv.row.newTrio((0, 1, 4))
                 while csv.readRow():
                     result.add compose(csv.row[ip], csv.row[port], csv.row[creds])
 
