@@ -56,7 +56,8 @@ when not defined(LexTrio):
         except: false
 
     proc isCreds(src: string): bool =
-        if src.split(':').len == 2: return true
+        let creds = src.split(':')
+        if creds.len == 2 and creds[1] == creds[1].strip(): return true
 
     proc first_match(sample: seq[string], tester: proc(src: string): bool, def_idx = -1): int {.inline.} = 
         for idx, elem in sample: (if elem.tester: return idx)
@@ -112,14 +113,13 @@ when not defined(DataList):
             var csv: CsvParser
             csv.open(file, ';')
             csv.readHeaderRow()
-            if "IP Address" in csv.headers: # Named headers parsing.
-                let (ip, port, creds) = ("IP Address", "Port", "Authorization")
-                while csv.readRow():
-                    result.add compose(csv.rowEntry(ip), csv.rowEntry(port), csv.rowEntry(creds))
-            else:                           # Guess-based headers parsing.
-                let (ip, port, creds) = csv.row.newTrio((0, 1, 4))
-                while csv.readRow():
-                    result.add compose(csv.row[ip], csv.row[port], csv.row[creds])
+            let trio = csv.row.newTrio((-1, 1, 4))
+            let (ip, port, creds) = if trio.ip == -1: # Was it header ?
+                discard csv.readRow(); csv.row.newTrio((0, 1, 4))
+            else: trio                                # ...No ? Even better then.
+            while true:
+                result.add compose(csv.row[ip], csv.row[port], csv.row[creds])
+                if not csv.readRow(): break
         except: echo getCurrentExceptionMsg()
 
     proc grab*(feed: string): DataList =
