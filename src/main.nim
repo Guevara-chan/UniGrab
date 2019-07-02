@@ -92,8 +92,8 @@ when not defined(UniUI):
             except: chunks.value = getCurrentExceptionMsg() 
         proc best_out() =
             let fname = feed.value.splitFile.name
-            chunklog.value = ".".joinPath(fname & " - chunks.txt")
-            checklog.value = ".".joinPath(fname & " - checked.txt")
+            for (ctrl, pref) in [(chunklog, "chunks"), (checklog, "checked")]:
+                ctrl.value = ".".joinPath [fname, " - ", pref, ".txt"].join("")
         proc ask_path(tc: wTextCtrl, feed: wTextCtrl) =
             const pattern = "Log files (*.txt)|(*.txt)|All files (*.*)|(*.*)"
             let res=FileDialog(frame,style=wFdSave,wildcard=pattern,defaultDir=tc.value.splitFile.dir).showModalResult()
