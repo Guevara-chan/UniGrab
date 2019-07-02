@@ -124,9 +124,8 @@ when not defined(DataList):
 
     proc grab*(feed: string): DataList =
         var grab_res: seq[FlowVar[DataList]]
-        for file in feed.joinPath("/*.xml").walkFiles: grab_res.add spawn(grab_xml(file))
-        for file in feed.joinPath("/*.html").walkFiles: grab_res.add spawn(grab_html(file))
-        for file in feed.joinPath("/*.csv").walkFiles: grab_res.add spawn(grab_csv(file))
+        for (mask, prc) in [("xml", grab_xml), ("html", grab_html), ("csv", grab_csv)]:
+            for file in feed.joinPath("/*."&mask).walkFiles: grab_res.add spawn(prc(file))
         for res in grab_res: result &= ^res
 
     proc raw*(self: DataList, add_port = true, add_creds = true): seq[string] =
