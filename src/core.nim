@@ -4,7 +4,6 @@
 import os, strutils, htmlparser, xmlparser, parsecsv, xmltree, uri, httpclient, threadpool, asyncdispatch
 import sequtils, parseutils, strtabs
 
-
 #.{ [Classes]
 when not defined(UniData):
     type UniData* = object
@@ -74,7 +73,6 @@ when not defined(LexTrio):
             let trio = toSeq(root.attrs.values).newTrio (-1, -1, 0)
             if trio.ip > -1 and trio.port > -1: return (root.tag, toSeq(root.attrs.keys).mapTrio trio)
         for child in root: return child.find_lexable()
-
 # -----------------------
 when not defined(DataList):
     type DataList* = seq[UniData]
