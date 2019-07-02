@@ -92,12 +92,21 @@ when not defined(DataList):
             except: echo getCurrentExceptionMsg()
 
     proc grab_html(feed: string): DataList {.thread.} =
+        # --Aux proc.
+        proc find_uris(root: XmlNode): seq[Uri] =
+            try:
+                let txt = root.innerText.split(' ')
+                var uri = txt[0].parseUri
+                if uri.hostname.isIP: 
+                    if txt.len > 1: (uri.username, uri.password) = txt[1].strip(true, true, {' ', '(', ')'}).split(':')
+                    result &= uri
+                for child in root: result &= child.find_uris()
+            except: discard
+        # -Actual parsing.
         for file in feed.joinPath("/*.html").walkFiles:
             try:
-                for entry in file.loadHtml.findAll("div"):
-                    if entry.attr("id") == "ipd": # Only ipds are parsed.
-                        let uri = entry.findAll("a")[0].attr("href").parseUri
-                        result.add compose(uri.hostname, uri.port)
+                for uri in file.loadHtml.find_uris.deduplicate:
+                    result.add compose(uri.hostname, uri.port, uri.username&":"&uri.password)
             except: echo getCurrentExceptionMsg()
 
     proc grab_csv(feed: string): DataList {.thread.} =
