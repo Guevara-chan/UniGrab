@@ -71,28 +71,35 @@ when not defined(DataList):
     # --Methods goes here:
     proc grab_xml(feed: string): DataList {.thread.} =
         for file in feed.joinPath("/*.xml").walkFiles:
-            for node in file.loadXml.findAll("Device"): # Only devices are parsed.
-                result.add compose(node.attr("ip"), node.attr("port"), node.attr("user")&":"&node.attr("password"))
+            try:
+                for node in file.loadXml.findAll("Device"): # Only devices are parsed.
+                    result.add compose(node.attr("ip"), node.attr("port"), node.attr("user")&":"&node.attr("password"))
+            except: echo getCurrentExceptionMsg()
 
     proc grab_html(feed: string): DataList {.thread.} =
         for file in feed.joinPath("/*.html").walkFiles:
-            for entry in file.loadHtml.findAll("div"):
-                if entry.attr("id") == "ipd": # Only ipds are parsed.
-                    let uri = entry.findAll("a")[0].attr("href").parseUri
-                    result.add compose(uri.hostname, uri.port)
+            try:
+                for entry in file.loadHtml.findAll("div"):
+                    if entry.attr("id") == "ipd": # Only ipds are parsed.
+                        let uri = entry.findAll("a")[0].attr("href").parseUri
+                        result.add compose(uri.hostname, uri.port)
+            except: echo getCurrentExceptionMsg()
 
     proc grab_csv(feed: string): DataList {.thread.} =
         for file in feed.joinPath("/*.csv").walkFiles:
-            var csv: CsvParser
-            csv.open(file, ';')
-            csv.readHeaderRow()
-            if "IP Address" in csv.headers: # Named headers parsing.
-                while csv.readRow():
-                    result.add compose(csv.rowEntry("IP Address"), csv.rowEntry("Port"), csv.rowEntry("Authorization"))
-            else:                           # Guess-based headers parsing.
-                let (ip, port, creds) = csv.row.newTrio((0, 1, 4))
-                while csv.readRow():
-                    result.add compose(csv.row[ip], csv.row[port], csv.row[creds])
+            try:
+                var csv: CsvParser
+                csv.open(file, ';')
+                csv.readHeaderRow()
+                if "IP Address" in csv.headers: # Named headers parsing.
+                    let (ip, port, creds) = ("IP Address", "Port", "Authorization")
+                    while csv.readRow():
+                        result.add compose(csv.rowEntry(ip), csv.rowEntry(port), csv.rowEntry(creds))
+                else:                           # Guess-based headers parsing.
+                    let (ip, port, creds) = csv.row.newTrio((0, 1, 4))
+                    while csv.readRow():
+                        result.add compose(csv.row[ip], csv.row[port], csv.row[creds])
+            except: echo getCurrentExceptionMsg()
 
     proc grab*(feed: string): DataList =
         var grab_res: seq[FlowVar[seq[UniData]]]
