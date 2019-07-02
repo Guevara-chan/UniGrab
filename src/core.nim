@@ -80,19 +80,18 @@ when not defined(DataList):
     type DataList* = seq[UniData]
 
     # --Methods goes here:
-    proc grab_xml(feed: string): DataList {.thread.} =
-        for file in feed.joinPath("/*.xml").walkFiles:
-            try:
-                let
-                    root                = file.loadXml
-                    (kind, map)         = root.find_lexable
-                    (ip, port, spoof)   = map
-                for node in root.findAll(kind): 
-                    result.add compose(node.attr(ip), node.attr(port), node.attr("user")&":"&node.attr("password"))
-            except: echo getCurrentExceptionMsg()
+    proc grab_xml(file: string): DataList {.thread.} =
+        try:
+            let
+                root                = file.loadXml
+                (kind, map)         = root.find_lexable
+                (ip, port, spoof)   = map
+            for node in root.findAll(kind): 
+                result.add compose(node.attr(ip), node.attr(port), node.attr("user")&":"&node.attr("password"))
+        except: echo getCurrentExceptionMsg()
 
-    proc grab_html(feed: string): DataList {.thread.} =
-        # --Aux proc.
+    proc grab_html(file: string): DataList {.thread.} =
+        # -Aux proc.
         proc find_uris(root: XmlNode): seq[Uri] =
             try:
                 let txt = root.innerText.split(' ')
@@ -103,33 +102,31 @@ when not defined(DataList):
                 for child in root: result &= child.find_uris()
             except: discard
         # -Actual parsing.
-        for file in feed.joinPath("/*.html").walkFiles:
-            try:
-                for uri in file.loadHtml.find_uris.deduplicate:
-                    result.add compose(uri.hostname, uri.port, uri.username&":"&uri.password)
-            except: echo getCurrentExceptionMsg()
+        try:
+            for uri in file.loadHtml.find_uris.deduplicate:
+                result.add compose(uri.hostname, uri.port, uri.username&":"&uri.password)
+        except: echo getCurrentExceptionMsg()
 
-    proc grab_csv(feed: string): DataList {.thread.} =
-        for file in feed.joinPath("/*.csv").walkFiles:
-            try:
-                var csv: CsvParser
-                csv.open(file, ';')
-                csv.readHeaderRow()
-                if "IP Address" in csv.headers: # Named headers parsing.
-                    let (ip, port, creds) = ("IP Address", "Port", "Authorization")
-                    while csv.readRow():
-                        result.add compose(csv.rowEntry(ip), csv.rowEntry(port), csv.rowEntry(creds))
-                else:                           # Guess-based headers parsing.
-                    let (ip, port, creds) = csv.row.newTrio((0, 1, 4))
-                    while csv.readRow():
-                        result.add compose(csv.row[ip], csv.row[port], csv.row[creds])
-            except: echo getCurrentExceptionMsg()
+    proc grab_csv(file: string): DataList {.thread.} =
+        try:
+            var csv: CsvParser
+            csv.open(file, ';')
+            csv.readHeaderRow()
+            if "IP Address" in csv.headers: # Named headers parsing.
+                let (ip, port, creds) = ("IP Address", "Port", "Authorization")
+                while csv.readRow():
+                    result.add compose(csv.rowEntry(ip), csv.rowEntry(port), csv.rowEntry(creds))
+            else:                           # Guess-based headers parsing.
+                let (ip, port, creds) = csv.row.newTrio((0, 1, 4))
+                while csv.readRow():
+                    result.add compose(csv.row[ip], csv.row[port], csv.row[creds])
+        except: echo getCurrentExceptionMsg()
 
     proc grab*(feed: string): DataList =
-        var grab_res: seq[FlowVar[seq[UniData]]]
-        grab_res.add(spawn feed.grab_xml())
-        grab_res.add(spawn feed.grab_html())
-        grab_res.add(spawn feed.grab_csv())
+        var grab_res: seq[FlowVar[DataList]]
+        for file in feed.joinPath("/*.xml").walkFiles: grab_res.add spawn(grab_xml(file))
+        for file in feed.joinPath("/*.html").walkFiles: grab_res.add spawn(grab_html(file))
+        for file in feed.joinPath("/*.csv").walkFiles: grab_res.add spawn(grab_csv(file))
         for res in grab_res: result &= ^res
 
     proc raw*(self: DataList, add_port = true, add_creds = true): seq[string] =
