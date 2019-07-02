@@ -43,6 +43,7 @@ when not defined(UniData):
 # -----------------------
 when not defined(LexTrio):
     type LexTrio = tuple[ip: int, port: int, creds: int]
+    type LexMap  = tuple[ip: string, port: string, creds: string]
 
     # --Methods goese here.
     proc isIP(src: string): bool =
@@ -62,11 +63,18 @@ when not defined(LexTrio):
         for idx, elem in sample: (if elem.tester: return idx)
         return def_idx
 
-    proc mapTrio(row: seq[string], map: LexTrio): tuple[ip: string, port: string, creds: string] =
+    proc mapTrio(row: seq[string], map: LexTrio): LexMap =
         (row[map.ip], row[map.port], row[map.creds])
 
     proc newTrio(sample: seq[string], defs: LexTrio = (-1, -1, -1)): LexTrio =
         (sample.first_match(isIP,defs.ip), sample.first_match(isPort,defs.port), sample.first_match(isCreds,defs.creds))
+
+    proc find_lexable(root: XmlNode): tuple[kind: string, map: LexMap] =
+        if root.attrs != nil:
+            let trio = toSeq(root.attrs.values).newTrio (-1, -1, 0)
+            if trio.ip > -1 and trio.port > -1: return (root.tag, toSeq(root.attrs.keys).mapTrio trio)
+        for child in root: return child.find_lexable()
+
 # -----------------------
 when not defined(DataList):
     type DataList* = seq[UniData]
@@ -75,9 +83,11 @@ when not defined(DataList):
     proc grab_xml(feed: string): DataList {.thread.} =
         for file in feed.joinPath("/*.xml").walkFiles:
             try:
-                let nodes = file.loadXml.findAll("Device") # Only devices are parsed.
-                let (ip, port, no) = toSeq(nodes[0].attrs.keys).mapTrio toSeq(nodes[0].attrs.values).newTrio (-1, -1, 0)
-                for node in nodes: 
+                let
+                    root                = file.loadXml
+                    (kind, map)         = root.find_lexable
+                    (ip, port, spoof)   = map
+                for node in root.findAll(kind): 
                     result.add compose(node.attr(ip), node.attr(port), node.attr("user")&":"&node.attr("password"))
             except: echo getCurrentExceptionMsg()
 
