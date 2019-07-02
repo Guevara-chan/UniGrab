@@ -2,7 +2,7 @@
 # Uni|Grab unified data ripper core
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
 import os, strutils, htmlparser, xmlparser, parsecsv, xmltree, uri, httpclient, threadpool, asyncdispatch
-import sequtils, parseutils
+import sequtils, parseutils, strtabs
 
 
 #.{ [Classes]
@@ -75,8 +75,10 @@ when not defined(DataList):
     proc grab_xml(feed: string): DataList {.thread.} =
         for file in feed.joinPath("/*.xml").walkFiles:
             try:
-                for node in file.loadXml.findAll("Device"): # Only devices are parsed.
-                    result.add compose(node.attr("ip"), node.attr("port"), node.attr("user")&":"&node.attr("password"))
+                let nodes = file.loadXml.findAll("Device") # Only devices are parsed.
+                let (ip, port, no) = toSeq(nodes[0].attrs.keys).mapTrio toSeq(nodes[0].attrs.values).newTrio (-1, -1, 0)
+                for node in nodes: 
+                    result.add compose(node.attr(ip), node.attr(port), node.attr("user")&":"&node.attr("password"))
             except: echo getCurrentExceptionMsg()
 
     proc grab_html(feed: string): DataList {.thread.} =
