@@ -44,7 +44,7 @@ when not defined(UniData):
 when not defined(LexTrio):
     type LexTrio = tuple[ip: int, port: int, creds: int]
 
-    # --Methofs goese here.
+    # --Methods goese here.
     proc isIP(src: string): bool =
         result = try: 
             let chunks = src.split('.').map(parseUInt)
@@ -61,6 +61,9 @@ when not defined(LexTrio):
     proc first_match(sample: seq[string], tester: proc(src: string): bool, def_idx = -1): int {.inline.} = 
         for idx, elem in sample: (if elem.tester: return idx)
         return def_idx
+
+    proc mapTrio(row: seq[string], map: LexTrio): tuple[ip: string, port: string, creds: string] =
+        (row[map.ip], row[map.port], row[map.creds])
 
     proc newTrio(sample: seq[string], defs: LexTrio = (-1, -1, -1)): LexTrio =
         (sample.first_match(isIP,defs.ip), sample.first_match(isPort,defs.port), sample.first_match(isCreds,defs.creds))
