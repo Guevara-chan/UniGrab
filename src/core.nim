@@ -127,6 +127,7 @@ when not defined(DataList):
         for (mask, prc) in [("xml", grab_xml), ("html", grab_html), ("csv", grab_csv)]:
             for file in feed.joinPath("/*."&mask).walkFiles: grab_res.add spawn(prc(file))
         for res in grab_res: result &= ^res
+        result.deduplicate()
 
     proc raw*(self: DataList, add_port = true, add_creds = true): seq[string] =
         for ud in self: result.add(ud.raw(add_port, add_creds))
