@@ -130,8 +130,8 @@ when not defined(DataList):
             if expcam.len > 0: # If it was expcamera log...
                 let data = expcam.mapIt(it.split(',').mapIt(it.split(":")[1]))
                 var zip: seq[seq[string]]
-                for idx, elem in data:
-                    if idx mod 2 == 1: zip.add data[idx-1]; zip[^1][^1] &= ":" & data[idx][^1]
+                for idx, elem in data: # Zipping stuff together.
+                    if idx mod 2 == 1: zip.add data[idx-1]; zip[^1][^1] &= ":" & elem[^1]
                 let (ip, port, creds) = zip[0].newTrio
                 return zip.mapIt compose(it[ip], it[port], it[creds])
         except: echo getCurrentExceptionMsg()
