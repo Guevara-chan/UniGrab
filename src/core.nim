@@ -145,7 +145,7 @@ when not defined(DataList):
         result.deduplicate()
 
     proc raw*(self: DataList, add_port = true, add_creds = true, http_style = true): seq[string] =
-        for ud in self: result.add(ud.raw(add_port, add_creds))
+        for ud in self: result.add(ud.raw(add_port, add_creds, http_style))
 
     proc check*(self: DataList): seq[Future[string]] =
         for ud in self: result.add(ud.check)
