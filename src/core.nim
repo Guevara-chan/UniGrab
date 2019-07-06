@@ -122,9 +122,21 @@ when not defined(DataList):
                 if not csv.readRow(): break
         except: echo getCurrentExceptionMsg()
 
+    proc grab_txt(file: string): DataList {.thread.} =
+        try:
+            let 
+                feed    = toSeq(lines(file))
+                expcam  = feed.filterIt(0 <= it.find "[92m[+]The ")
+            if expcam.len > 0: # If it was expcamera log...
+                let data = expcam.mapIt(it.split(',').mapIt(it.split(":")[1]))
+                let zip = data.distribute(data.len shr 1, false).mapIt it[0][0..^2] & (it[0][^1] & ":" & it[1][^1])
+                let (ip, port, creds) = zip[0].newTrio
+                return zip.mapIt compose(it[ip], it[port], it[creds])
+        except: echo getCurrentExceptionMsg()
+
     proc grab*(feed: string, recursive = false): DataList =
         var grab_res: seq[FlowVar[DataList]]
-        for (mask, prc) in [("xml", grab_xml), ("html", grab_html), ("csv", grab_csv)]:
+        for (mask, prc) in [("xml", grab_xml), ("html", grab_html), ("csv", grab_csv), ("txt", grab_txt)]:
             for file in feed.joinPath("/*."&mask).walkFiles: grab_res.add spawn(prc(file))
         for res in grab_res: result &= ^res
         if recursive: (for dir in feed.walkDirs(): result &= dir.grab(true))
