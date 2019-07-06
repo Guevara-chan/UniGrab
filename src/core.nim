@@ -128,10 +128,11 @@ when not defined(DataList):
                 feed    = toSeq(lines(file))
                 expcam  = feed.filterIt(0 <= it.find "[92m[+]The ")
             if expcam.len > 0: # If it was expcamera log...
-                let 
-                    data = expcam.mapIt(it.split(',').mapIt(it.split(":")[1]))
-                    zip = data.distribute(data.len shr 1, false).mapIt it[0][0..^2] & (it[0][^1] & ":" & it[1][^1])
-                    (ip, port, creds) = zip[0].newTrio
+                let data = expcam.mapIt(it.split(',').mapIt(it.split(":")[1]))
+                var zip: seq[seq[string]]
+                for idx, elem in data:
+                    if idx mod 2 == 1: zip.add data[idx-1]; zip[^1][^1] &= ":" & data[idx][^1]
+                let (ip, port, creds) = zip[0].newTrio
                 return zip.mapIt compose(it[ip], it[port], it[creds])
         except: echo getCurrentExceptionMsg()
 
