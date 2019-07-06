@@ -10,8 +10,10 @@ when not defined(UniData):
         ip, port, creds: string
 
     # --Methods goes here:
-    proc raw*(self: UniData, add_port = true, add_creds = true): string {.inline} =
-        (if add_creds and self.creds.len>1: self.creds&"@" else: "") & self.ip & (if add_port: ":" & self.port else: "")
+    proc raw*(self: UniData, add_port = true, add_creds = true, http_style = true): string {.inline} =
+        let parts = [self.ip & (if add_port: ":" & self.port else: ""), (if add_creds: self.creds else: "")]
+        return if http_style: parts[1] & (if parts[1].len>1: "@" else: "") & parts[0] # For HTTP access.
+        else: parts[0] & (if parts[1].len>1: " " else: "") & parts[1]                 # For my old checker.
 
     proc check*(self: UniData, timeout = 5000): Future[string] {.async.} =
         # Aux proc.
