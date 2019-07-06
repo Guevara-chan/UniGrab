@@ -133,7 +133,7 @@ when not defined(DataList):
                 for idx, elem in data: # Zipping stuff together.
                     if idx mod 2 == 1: zip.add data[idx-1]; zip[^1][^1] &= ":" & elem[^1]
                 let (ip, port, creds) = zip[0].newTrio
-                return zip.mapIt compose(it[ip], it[port], it[creds])
+                for entry in zip: result.add compose(entry[ip], entry[port], entry[creds])
         except: echo getCurrentExceptionMsg()
 
     proc grab*(feed: string, recursive = false): DataList =
