@@ -144,7 +144,7 @@ when not defined(DataList):
         if recursive: (for dir in feed.walkDirs(): result &= dir.grab(true))
         result.deduplicate()
 
-    proc raw*(self: DataList, add_port = true, add_creds = true): seq[string] =
+    proc raw*(self: DataList, add_port = true, add_creds = true, http_style = true): seq[string] =
         for ud in self: result.add(ud.raw(add_port, add_creds))
 
     proc check*(self: DataList): seq[Future[string]] =
