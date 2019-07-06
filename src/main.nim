@@ -65,25 +65,25 @@ when not defined(UniUI):
         # -Auxiliary procs.
         proc layout() =
             panel.autolayout """
-            |[start(=55)][feed][ilocate(=55)]|
-            |[panels]|
-            V:|[start, ilocate][panels]|
-            V:|-1-[feed]-1-[panels]|
+                |[start(=55)][feed][ilocate(=55)]|
+                |[panels]|
+                V:|[start, ilocate][panels]|
+                V:|-1-[feed]-1-[panels]|
             """
             panels[0].autolayout """
-            |[chunks]|
-            |[addports(=55)][addcreds(=55)][chunklog][chunksav(=55)]|
-            V:|[chunks][addports,addcreds, chunksav]|
-            V:|[chunks]-1-[chunklog]-1-|
+                |[chunks]|
+                |[addports(=55)][addcreds(=55)][chunklog][chunksav(=55)]|
+                V:|[chunks][addports,addcreds, chunksav]|
+                V:|[chunks]-1-[chunklog]-1-|
             """
             panels[1].autolayout """
-            |[checked]|
-            |[checklog][checksav(=55)]|
-            V:|[checked][checksav]|
-            V:|[checked]-1-[checklog]-1-|
+                |[checked]|
+                |[checklog][checksav(=55)]|
+                V:|[checked][checksav]|
+                V:|[checked]-1-[checklog]-1-|
             """
         proc format() =
-            chunks.value = self.last_grab.raw(addports.value, addcreds.value).join("\n") 
+            chunks.value = self.last_grab.raw(addports.value, addcreds.value, false).join("\n") 
             chunks.dump(chunklog.value)
             chunks.showPosition(0)
         proc process() =
