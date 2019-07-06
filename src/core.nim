@@ -87,8 +87,7 @@ when not defined(DataList):
                 root                = file.loadXml
                 (kind, map)         = root.find_lexable
                 (ip, port, spoof)   = map
-            for node in root.findAll(kind): 
-                result.add compose(node.attr(ip), node.attr(port), node.attr("user")&":"&node.attr("password"))
+            return root.findAll(kind).mapIt compose(it.attr(ip), it.attr(port), it.attr("user")&":"&it.attr("password"))
         except: echo getCurrentExceptionMsg()
 
     proc grab_html(file: string): DataList {.thread.} =
@@ -104,8 +103,7 @@ when not defined(DataList):
             except: discard
         # -Actual parsing.
         try:
-            for uri in file.loadHtml.find_uris.deduplicate:
-                result.add compose(uri.hostname, uri.port, uri.username&":"&uri.password)
+            return file.loadHtml.find_uris.deduplicate.mapIt compose(it.hostname, it.port, it.username&":"&it.password)
         except: echo getCurrentExceptionMsg()
 
     proc grab_csv(file: string): DataList {.thread.} =
@@ -133,7 +131,7 @@ when not defined(DataList):
                 for idx, elem in data: # Zipping stuff together.
                     if idx mod 2 == 1: zip.add data[idx-1]; zip[^1][^1] &= ":" & elem[^1]
                 let (ip, port, creds) = zip[0].newTrio
-                for entry in zip: result.add compose(entry[ip], entry[port], entry[creds])
+                return zip.mapIt compose(it[ip], it[port], it[creds])
         except: echo getCurrentExceptionMsg()
 
     proc grab*(feed: string, recursive = false): DataList =
