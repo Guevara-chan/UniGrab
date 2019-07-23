@@ -95,8 +95,9 @@ when not defined(UniUI):
             for (ctrl, pref) in [(chunklog, "chunks"), (checklog, "checked")]:
                 ctrl.value = ".".joinPath [fname, " - ", pref, ".txt"].join("")
         proc ask_path(tc: wTextCtrl, feed: wTextCtrl) =
-            const pattern = "Log files (*.txt)|(*.txt)|All files (*.*)|(*.*)"
-            let res=FileDialog(frame,style=wFdSave,wildcard=pattern,defaultDir=tc.value.splitFile.dir).showModalResult()
+            const pattern = "Log files (*.txt)|*.txt|All files (*.*)|*.*"
+            let thisdir = tc.value.splitFile.dir.absolutePath
+            let res=FileDialog(frame, style = wFdSave, wildcard = pattern, defaultDir = thisdir).showModalResult()
             if res.len > 0 and feed.dump(res[0]).inquire(): tc.value = res[0]
         # -Event handling.
         feed.wEvent_Text            do (): best_out()
