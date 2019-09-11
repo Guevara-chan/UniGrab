@@ -1,7 +1,7 @@
 # •Sum•
 __Uni|Grab__ is a polyglot log analyzing utility, made to extract and check IP data from [Nesca](https://github.com/pantyusha/nesca)/[expcamera](https://github.com/vanpersiexp/expcamera)/[Router Scan](https://forum.antichat.ru/threads/398971/) reports.  
 Developed by [friendly](https://github.com/d38k8) request, it's focused on achieving total source format agnosticism eventualy.  
-__Latest version:__ https://github.com/Guevara-chan/UniGrab/releases/download/0.1/Uni│Grab.zip (direct link)
+__Latest version:__ https://github.com/Guevara-chan/UniGrab/releases/download/0.03/Uni│Grab.zip (direct link)
 
 # •Featuræ•
 * Multiple (and growing) list of src formats supported.
