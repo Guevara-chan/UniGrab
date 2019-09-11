@@ -2,7 +2,8 @@
 # Uni|Grab unified data ripper v0.03
 # Developed in 2019 by Guevara-chan
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
-import core, os, strutils, sequtils, wnim
+import core, os, strutils, sequtils
+import wNim/[wApp,wFrame,wTextCtrl,wButton,wMessageDialog,wPanel,wNoteBook,wCheckBox,wIcon,wFileDialog,wDirDialog]
 when sizeof(int) == 8: {.link: "res/uni64.o".}
 {.this: self.}
 
@@ -21,7 +22,7 @@ when not defined(UniUI):
         except: getCurrentExceptionMsg()
 
     proc inquire(err_text: string): bool {.discardable.} =
-        if err_text != "": MessageDialog(nil, err_text, "[Uni|Grab] error:", wIconErr).show.int == 0 else: true
+        if err_text != "": MessageDialog(nil, err_text, "[Uni|Grab] error:", wIconErr).display.int == 0 else: true
 
     proc checker(self: UniUI) {.thread.} =
         try:
@@ -97,7 +98,7 @@ when not defined(UniUI):
         proc ask_path(tc: wTextCtrl, feed: wTextCtrl) =
             const pattern = "Log files (*.txt)|*.txt|All files (*.*)|*.*"
             let thisdir = tc.value.splitFile.dir.absolutePath
-            let res=FileDialog(frame, style = wFdSave, wildcard = pattern, defaultDir = thisdir).showModalResult()
+            let res = FileDialog(frame, style = wFdSave, wildcard = pattern, defaultDir = thisdir).display()
             if res.len > 0 and feed.dump(res[0]).inquire(): tc.value = res[0]
         # -Event handling.
         feed.wEvent_Text            do (): best_out()
@@ -109,7 +110,7 @@ when not defined(UniUI):
         checksav.wEvent_Button      do (): ask_path(checklog, checked)
         ilocate.wEvent_Button       do (): # Input directory selector.
             let new_feed = DirDialog(frame, 
-                defaultPath = if feed.value.dirExists:feed.value.absolutePath else: "").showModalResult()
+                defaultPath = if feed.value.dirExists:feed.value.absolutePath else: "").display()
             if new_feed != "": feed.value = new_feed            
         # -Finalization.
         check_chan.open()
